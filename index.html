@@ -128,13 +128,12 @@
     transform: translateY(-50%); font-size: 72px; opacity: 0.12; pointer-events: none;
   }
   .header-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(255,255,255,0.2); border-radius: var(--radius-full);
-    padding: 4px 12px; font-size: 11px; font-weight: 600; margin-bottom: 12px;
-    letter-spacing: 0.3px;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.22); border-radius: var(--radius-full);
+    padding: 6px 15px; font-size: 13.5px; font-weight: 700; margin-bottom: 14px;
+    letter-spacing: 0.2px;
   }
-  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 5px; line-height: 1.3; }
-  .header p { font-size: 13px; opacity: 0.8; line-height: 1.6; }
+  .header h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.25; }
 
   /* ── 안내문 ── */
   .notice-box {
@@ -145,7 +144,12 @@
 
   /* ── 정보 그리드 ── */
   .info-grid { display: grid; grid-template-columns: 1fr 1fr; background: white; }
-  .info-item { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); }
+  .info-item {
+    padding: 14px 18px; border-bottom: 1px solid var(--gray-100);
+    transition: background 0.18s ease, transform 0.18s ease;
+    cursor: default;
+  }
+  .info-item:hover { background: var(--red-light); transform: translateY(-2px); }
   .info-item:nth-child(odd) { border-right: 1px solid var(--gray-100); }
   .info-label { color: var(--gray-400); font-size: 10px; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; }
   .info-value { color: var(--gray-800); font-weight: 600; font-size: 14px; }
@@ -170,6 +174,12 @@
   .restriction-item {
     display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px;
     background: var(--gray-50); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-600);
+    border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  }
+  .restriction-item:hover {
+    background: var(--red-light); border-color: var(--red-mid);
+    transform: translateX(4px); box-shadow: 0 4px 12px rgba(229,52,42,0.1);
   }
   .restriction-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
 
@@ -305,8 +315,7 @@
   @media (max-width: 480px) {
     body { padding: 14px 10px 32px; }
     .header { padding: 22px 18px 20px; }
-    .header h1 { font-size: 19px; }
-    .header p { font-size: 12px; }
+    .header h1 { font-size: 24px; }
     .sync-bar, .list-toggle, .admin-toggle { padding: 9px 13px; font-size: 11.5px; }
     .section { padding: 18px 16px; }
     .radio-group { gap: 6px; }
@@ -373,7 +382,6 @@
     <div class="header">
       <div class="header-badge">🩸 헌혈 참여 안내</div>
       <h1>학부모 동의서</h1>
-      <p id="disp-subtitle">2026년 5월 8일(금) 9:30 ~ | 이동형 헌혈 버스 본교 방문</p>
     </div>
 
     <!-- 안내문 -->
@@ -535,6 +543,7 @@
         currentConfig = data.config;
         applyConfigToDisplay(currentConfig);
         if (Array.isArray(data.restrictions)) renderRestrictions(data.restrictions);
+        if (Array.isArray(data.checklist)) renderChecklist(data.checklist);
         const now = new Date();
         setSyncStatus('ok', '최신 정보 (' + now.toLocaleTimeString('ko-KR') + ' 기준)');
       } else {
@@ -563,12 +572,26 @@
     }).join('');
   }
 
+  function renderChecklist(list) {
+    const container = document.getElementById('checklist');
+    if (!list || list.length === 0) return; // 시트가 비어있으면 기존 기본 목록 유지
+    container.innerHTML = list.map((item, idx) => {
+      const id = 'c' + (idx + 1);
+      const icon = item.icon ? escapeHtml_(item.icon) + ' ' : '';
+      const text = escapeHtml_(item.text || '');
+      return '<div class="check-item" onclick="toggleCheck(this)">' +
+        '<input type="checkbox" id="' + id + '">' +
+        '<label for="' + id + '">' + icon + text + '</label>' +
+        '</div>';
+    }).join('');
+    updateNextButtonState();
+  }
+
   function applyConfigToDisplay(cfg) {
     if (cfg.event_date) document.getElementById('disp-date').textContent = cfg.event_date;
     if (cfg.place)       document.getElementById('disp-place').textContent = cfg.place;
     if (cfg.target)      document.getElementById('disp-target').textContent = cfg.target;
     if (cfg.service)     document.getElementById('disp-service').textContent = cfg.service;
-    if (cfg.subtitle)    document.getElementById('disp-subtitle').textContent = cfg.subtitle;
     if (cfg.q2_title)    document.getElementById('disp-q2-title').textContent = cfg.q2_title;
     if (cfg.q2_sub)      document.getElementById('disp-q2-sub').textContent = cfg.q2_sub;
 
@@ -794,14 +817,9 @@
   canvas.addEventListener('touchcancel', endDraw, { passive: false });
   window.addEventListener('resize', initCanvas);
 
-  const CHECKLIST_ITEMS = [
-    '😴 헌혈 전 충분한 숙면',
-    '🍚 헌혈 당일 아침 식사 필수',
-    '🪪 본인 주민번호 13자리 숙지',
-    '💊 약물복용 · 감염병 확진 등 헌혈 제한 사항 고지의무',
-    '📌 보호자의 동의 필수',
-    '⚠️ 헌혈진행자가 많은 경우 당일 참여가 어려울 수 있음'
-  ];
+  function getCurrentChecklistLabels() {
+    return Array.from(document.querySelectorAll('#checklist label')).map(l => l.textContent.trim());
+  }
 
   const WIZARD_TOTAL_STEPS = 8;
   let wizardIndex = 0;
@@ -850,6 +868,13 @@
     document.getElementById('progressLabel').textContent = (index + 1) + ' / ' + WIZARD_TOTAL_STEPS;
     document.getElementById('wizardBackBtn').disabled = (index === 0);
     document.getElementById('wizardNextBtn').textContent = (index === WIZARD_TOTAL_STEPS - 1) ? '동의서 제출하기 →' : '다음 →';
+
+    // 서명 단계는 숨겨진 상태(display:none)에서 캔버스 너비가 0으로 잡히는 문제가 있어,
+    // 화면에 보일 때마다 실제 너비 기준으로 캔버스를 다시 초기화합니다 (기존 서명은 유지됨).
+    if (index === 7) {
+      initCanvas();
+    }
+
     updateNextButtonState();
 
     const stepEl = document.getElementById('step-' + index);
@@ -959,7 +984,7 @@
     const payload = {
       submitTime: new Date().toISOString(),
       studentId, studentName, parentTel, parentName, q2, q3,
-      checklist: CHECKLIST_ITEMS,
+      checklist: getCurrentChecklistLabels(),
       signatureData: canvas.toDataURL('image/png')
     };
 
