@@ -178,10 +178,13 @@
   .check-item {
     display: flex; align-items: center; gap: 12px; padding: 13px 16px;
     border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
-    cursor: pointer; transition: all 0.12s; background: white;
+    cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    background: white;
   }
+  .check-item:hover { border-color: var(--red-mid); background: var(--red-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,52,42,0.1); }
   .check-item:active { transform: scale(0.99); }
   .check-item.checked { border-color: var(--red); background: var(--red-light); }
+  .check-item.checked:hover { transform: translateY(-2px) scale(1.005); }
   .check-item input[type="checkbox"] { width: 18px; height: 18px; min-width: 18px; accent-color: var(--red); cursor: pointer; }
   .check-item label { font-size: 13.5px; line-height: 1.45; cursor: pointer; color: var(--gray-800); }
 
@@ -201,10 +204,13 @@
     flex: 1; padding: 13px 10px; border: 1.5px solid var(--gray-200);
     border-radius: var(--radius-sm); text-align: center; cursor: pointer;
     font-size: 14px; font-weight: 600; color: var(--gray-600);
-    transition: all 0.12s; background: var(--gray-50);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    background: var(--gray-50);
   }
+  .radio-item:hover { border-color: var(--red); color: var(--red); transform: translateY(-3px); box-shadow: 0 6px 14px rgba(229,52,42,0.14); }
   .radio-item:active { transform: scale(0.98); }
   .radio-item.selected { border-color: var(--red); background: var(--red); color: white; box-shadow: 0 2px 8px rgba(229,52,42,0.25); }
+  .radio-item.selected:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(229,52,42,0.3); }
 
   /* ── 입력 필드 ── */
   .field-group { margin-bottom: 20px; }
@@ -239,6 +245,38 @@
   .btn-clear:hover { background: var(--gray-100); }
   .sig-label { padding: 10px 16px; font-size: 12px; color: var(--gray-400); border-bottom: 1px solid var(--gray-100); }
 
+  /* ── 단계별 위저드 ── */
+  .wizard-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .wizard-progress-track { flex: 1; height: 5px; background: var(--gray-100); border-radius: var(--radius-full); overflow: hidden; }
+  .wizard-progress-fill { height: 100%; background: var(--red); border-radius: var(--radius-full); transition: width 0.35s ease; width: 12.5%; }
+  .wizard-progress-label { font-size: 11.5px; font-weight: 700; color: var(--gray-400); white-space: nowrap; min-width: 40px; text-align: right; }
+
+  .wizard-viewport { position: relative; min-height: 120px; }
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; animation: wizardIn 0.32s ease; }
+  @keyframes wizardIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .wizard-nav { display: flex; gap: 10px; margin-top: 22px; }
+  .wizard-nav-btn {
+    flex: 1; padding: 15px; border: none; border-radius: var(--radius-full);
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+    letter-spacing: -0.2px; transition: all 0.15s;
+  }
+  .wizard-nav-back {
+    flex: 0 0 92px; background: var(--gray-100); color: var(--gray-600);
+  }
+  .wizard-nav-back:hover { background: var(--gray-200); }
+  .wizard-nav-back:disabled { opacity: 0; pointer-events: none; }
+  .wizard-nav-next {
+    background: var(--red); color: white; box-shadow: 0 4px 16px rgba(229,52,42,0.3);
+  }
+  .wizard-nav-next:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(229,52,42,0.35); }
+  .wizard-nav-next:active { transform: translateY(0); }
+  .wizard-nav-next:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; box-shadow: none; transform: none; }
+
   /* ── 제출 버튼 ── */
   .submit-btn {
     width: 100%; padding: 17px; background: var(--red); color: white; border: none;
@@ -262,6 +300,31 @@
   .form-disabled-overlay .icon { font-size: 40px; margin-bottom: 12px; }
   .form-disabled-overlay p { color: var(--red); font-weight: 700; font-size: 16px; margin-bottom: 6px; }
   .form-disabled-overlay small { color: var(--gray-400); font-size: 13px; }
+
+  /* ── 모바일 대응 ── */
+  @media (max-width: 480px) {
+    body { padding: 14px 10px 32px; }
+    .header { padding: 22px 18px 20px; }
+    .header h1 { font-size: 19px; }
+    .header p { font-size: 12px; }
+    .sync-bar, .list-toggle, .admin-toggle { padding: 9px 13px; font-size: 11.5px; }
+    .section { padding: 18px 16px; }
+    .radio-group { gap: 6px; }
+    .radio-item { font-size: 13px; padding: 12px 6px; }
+    .wizard-nav-back { flex: 0 0 74px; padding: 15px 6px; font-size: 13px; }
+    .wizard-nav-next { font-size: 14.5px; padding: 15px 10px; }
+    .list-panel-header { flex-direction: column; align-items: flex-start; }
+    .list-sort-buttons { width: 100%; }
+    .sort-btn { flex: 1; }
+    .submission-table th, .submission-table td { padding: 9px 10px; font-size: 12px; }
+    .check-item label { font-size: 13px; }
+    .q-title { font-size: 13.5px; }
+  }
+
+  @media (max-width: 360px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .info-item:nth-child(odd) { border-right: none; }
+  }
 </style>
 </head>
 <body>
@@ -342,76 +405,88 @@
       </div>
     </div>
 
-    <!-- 동의서 작성 폼 -->
+    <!-- 동의서 작성 폼 (단계별 진행) -->
     <div class="section" id="form-section">
       <div class="section-title"><span class="section-title-dot"></span>동의서 작성</div>
 
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">1</span>헌혈 유의사항을 모두 확인하셨나요? <span class="required">*</span></div>
-        <div class="q-sub">아래 항목을 모두 체크해주세요</div>
-        <div class="checklist" id="checklist">
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c1"><label for="c1">😴 헌혈 전 충분한 숙면</label></div>
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c2"><label for="c2">🍚 헌혈 당일 아침 식사 필수</label></div>
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c3"><label for="c3">🪪 본인 주민번호 13자리 숙지</label></div>
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c4"><label for="c4">💊 약물복용 · 감염병 확진 등 헌혈 제한 사항 고지의무</label></div>
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c5"><label for="c5">📌 보호자의 동의 필수</label></div>
-          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c6"><label for="c6">⚠️ 헌혈진행자가 많은 경우 당일 참여가 어려울 수 있음</label></div>
-        </div>
+      <div class="wizard-progress">
+        <div class="wizard-progress-track"><div class="wizard-progress-fill" id="progressFill"></div></div>
+        <div class="wizard-progress-label" id="progressLabel">1 / 8</div>
       </div>
 
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">2</span><span id="disp-q2-title">학생의 나이가 만 16세 이상(2010년생 생일이 지난 경우), 몸무게 47kg 이상입니까?</span><span class="required">*</span></div>
-        <div class="q-sub" id="disp-q2-sub">(여학생의 경우, 만 16세 미만, 몸무게 47kg 미만인 경우 참여불가 합니다.)</div>
-        <div class="radio-group">
-          <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="예">예</div>
-          <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="아니오">아니오</div>
-        </div>
-      </div>
+      <div class="wizard-viewport">
 
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">3</span>학생의 헌혈 참여에 동의하십니까? <span class="required">*</span></div>
-        <div class="q-sub">(학생의 헌혈 참여는 학부모님의 동의가 반드시 필요합니다.)</div>
-        <div class="radio-group">
-          <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="동의">예, 동의합니다</div>
-          <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="미동의">아니오</div>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">4</span>학생 학번 <span class="required">*</span></div>
-        <input type="text" id="student-id" placeholder="예: 20101" maxlength="10">
-        <div class="field-hint">학년+반+번호 형식 (예: 20101 = 2학년 1반 1번)</div>
-      </div>
-
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">5</span>학생 이름 <span class="required">*</span></div>
-        <input type="text" id="student-name" placeholder="예: 홍길동">
-      </div>
-
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">6</span>학부모 연락처 <span class="required">*</span></div>
-        <input type="tel" id="parent-tel" placeholder="예: 010-0000-0000">
-      </div>
-
-      <div class="field-group">
-        <div class="q-title"><span class="q-number">7</span>보호자 성명 <span class="required">*</span></div>
-        <input type="text" id="parent-name" placeholder="예: 홍길순">
-      </div>
-
-      <div class="field-group">
-        <div class="q-title" style="margin-bottom:6px;">학부모 서명 <span class="required">*</span></div>
-        <div class="field-hint" style="color:var(--red);font-weight:600;margin-bottom:3px;">✏️ 보호자 성명을 정자로 기입해주세요.</div>
-        <div class="field-hint" style="margin-bottom:10px;">손가락을 떼도 서명이 유지됩니다.</div>
-        <div class="canvas-wrap">
-          <div class="sig-label">서명란</div>
-          <canvas id="sigCanvas" height="180"></canvas>
-          <div class="canvas-actions">
-            <button class="btn-clear" onclick="clearCanvas()">서명 지우기</button>
+        <div class="wizard-step" id="step-0">
+          <div class="q-title"><span class="q-number">1</span>헌혈 유의사항을 모두 확인하셨나요? <span class="required">*</span></div>
+          <div class="q-sub">아래 항목을 모두 체크해주세요</div>
+          <div class="checklist" id="checklist">
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c1"><label for="c1">😴 헌혈 전 충분한 숙면</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c2"><label for="c2">🍚 헌혈 당일 아침 식사 필수</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c3"><label for="c3">🪪 본인 주민번호 13자리 숙지</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c4"><label for="c4">💊 약물복용 · 감염병 확진 등 헌혈 제한 사항 고지의무</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c5"><label for="c5">📌 보호자의 동의 필수</label></div>
+            <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c6"><label for="c6">⚠️ 헌혈진행자가 많은 경우 당일 참여가 어려울 수 있음</label></div>
           </div>
         </div>
+
+        <div class="wizard-step" id="step-1">
+          <div class="q-title"><span class="q-number">2</span><span id="disp-q2-title">학생의 나이가 만 16세 이상(2010년생 생일이 지난 경우), 몸무게 47kg 이상입니까?</span><span class="required">*</span></div>
+          <div class="q-sub" id="disp-q2-sub">(여학생의 경우, 만 16세 미만, 몸무게 47kg 미만인 경우 참여불가 합니다.)</div>
+          <div class="radio-group">
+            <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="예">예</div>
+            <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="아니오">아니오</div>
+          </div>
+        </div>
+
+        <div class="wizard-step" id="step-2">
+          <div class="q-title"><span class="q-number">3</span>학생의 헌혈 참여에 동의하십니까? <span class="required">*</span></div>
+          <div class="q-sub">(학생의 헌혈 참여는 학부모님의 동의가 반드시 필요합니다.)</div>
+          <div class="radio-group">
+            <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="동의">예, 동의합니다</div>
+            <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="미동의">아니오</div>
+          </div>
+        </div>
+
+        <div class="wizard-step" id="step-3">
+          <div class="q-title"><span class="q-number">4</span>학생 학번 <span class="required">*</span></div>
+          <input type="text" id="student-id" placeholder="예: 20101" maxlength="10">
+          <div class="field-hint">학년+반+번호 형식 (예: 20101 = 2학년 1반 1번)</div>
+        </div>
+
+        <div class="wizard-step" id="step-4">
+          <div class="q-title"><span class="q-number">5</span>학생 이름 <span class="required">*</span></div>
+          <input type="text" id="student-name" placeholder="예: 홍길동">
+        </div>
+
+        <div class="wizard-step" id="step-5">
+          <div class="q-title"><span class="q-number">6</span>학부모 연락처 <span class="required">*</span></div>
+          <input type="tel" id="parent-tel" placeholder="예: 010-0000-0000">
+        </div>
+
+        <div class="wizard-step" id="step-6">
+          <div class="q-title"><span class="q-number">7</span>보호자 성명 <span class="required">*</span></div>
+          <input type="text" id="parent-name" placeholder="예: 홍길순">
+        </div>
+
+        <div class="wizard-step" id="step-7">
+          <div class="q-title" style="margin-bottom:6px;">학부모 서명 <span class="required">*</span></div>
+          <div class="field-hint" style="color:var(--red);font-weight:600;margin-bottom:3px;">✏️ 보호자 성명을 정자로 기입해주세요.</div>
+          <div class="field-hint" style="margin-bottom:10px;">손가락을 떼도 서명이 유지됩니다.</div>
+          <div class="canvas-wrap">
+            <div class="sig-label">서명란</div>
+            <canvas id="sigCanvas" height="180"></canvas>
+            <div class="canvas-actions">
+              <button class="btn-clear" onclick="clearCanvas()">서명 지우기</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <button class="submit-btn" id="submitBtn" onclick="submitForm()">동의서 제출하기 →</button>
+      <div class="wizard-nav">
+        <button class="wizard-nav-btn wizard-nav-back" id="wizardBackBtn" onclick="wizardBack()">← 이전</button>
+        <button class="wizard-nav-btn wizard-nav-next" id="wizardNextBtn" onclick="wizardNext()">다음 →</button>
+      </div>
     </div>
 
     <div class="form-disabled-overlay" id="formDisabled">
@@ -531,6 +606,7 @@
   window.addEventListener('load', () => {
     fetchConfig();
     initCanvas();
+    initWizard();
   });
 
   // ── 신청자 명단 ──
@@ -682,6 +758,7 @@
     e.preventDefault();
     drawing = false;
     if (currentPath.length > 0) paths.push([...currentPath]);
+    updateNextButtonState();
   }
 
   function redrawAll() {
@@ -700,6 +777,7 @@
     paths = [];
     currentPath = [];
     hasSig = false;
+    updateNextButtonState();
   }
 
   canvas.style.touchAction = 'none';
@@ -716,10 +794,23 @@
   canvas.addEventListener('touchcancel', endDraw, { passive: false });
   window.addEventListener('resize', initCanvas);
 
+  const CHECKLIST_ITEMS = [
+    '😴 헌혈 전 충분한 숙면',
+    '🍚 헌혈 당일 아침 식사 필수',
+    '🪪 본인 주민번호 13자리 숙지',
+    '💊 약물복용 · 감염병 확진 등 헌혈 제한 사항 고지의무',
+    '📌 보호자의 동의 필수',
+    '⚠️ 헌혈진행자가 많은 경우 당일 참여가 어려울 수 있음'
+  ];
+
+  const WIZARD_TOTAL_STEPS = 8;
+  let wizardIndex = 0;
+
   function toggleCheck(el) {
     const cb = el.querySelector('input[type="checkbox"]');
     cb.checked = !cb.checked;
     el.classList.toggle('checked', cb.checked);
+    updateNextButtonState();
   }
 
   const radioValues = {};
@@ -727,6 +818,94 @@
     document.querySelectorAll(`[data-group="${group}"]`).forEach(r => r.classList.remove('selected'));
     el.classList.add('selected');
     radioValues[group] = el.dataset.value;
+    updateNextButtonState();
+    setTimeout(() => wizardNext(), 320); // 선택하면 자동으로 다음 화면으로 이동
+  }
+
+  function isStepAnswered(index) {
+    if (index === 0) return document.querySelectorAll('#checklist input:not(:checked)').length === 0;
+    if (index === 1) return !!radioValues['q2'];
+    if (index === 2) return !!radioValues['q3'];
+    if (index === 3) return document.getElementById('student-id').value.trim().length > 0;
+    if (index === 4) return document.getElementById('student-name').value.trim().length > 0;
+    if (index === 5) return document.getElementById('parent-tel').value.trim().length > 0;
+    if (index === 6) return document.getElementById('parent-name').value.trim().length > 0;
+    if (index === 7) return hasSig;
+    return true;
+  }
+
+  function updateNextButtonState() {
+    const nextBtn = document.getElementById('wizardNextBtn');
+    if (nextBtn) nextBtn.disabled = !isStepAnswered(wizardIndex);
+  }
+
+  function showStep(index) {
+    wizardIndex = index;
+    for (let i = 0; i < WIZARD_TOTAL_STEPS; i++) {
+      const el = document.getElementById('step-' + i);
+      if (!el) continue;
+      el.classList.toggle('active', i === index);
+    }
+    document.getElementById('progressFill').style.width = (((index + 1) / WIZARD_TOTAL_STEPS) * 100) + '%';
+    document.getElementById('progressLabel').textContent = (index + 1) + ' / ' + WIZARD_TOTAL_STEPS;
+    document.getElementById('wizardBackBtn').disabled = (index === 0);
+    document.getElementById('wizardNextBtn').textContent = (index === WIZARD_TOTAL_STEPS - 1) ? '동의서 제출하기 →' : '다음 →';
+    updateNextButtonState();
+
+    const stepEl = document.getElementById('step-' + index);
+    const firstInput = stepEl ? stepEl.querySelector('input[type="text"], input[type="tel"]') : null;
+    if (firstInput) setTimeout(() => firstInput.focus(), 320);
+  }
+
+  function wizardBack() {
+    if (wizardIndex === 0) return;
+    showStep(wizardIndex - 1);
+  }
+
+  function wizardNext() {
+    if (deadlineTime && new Date() > deadlineTime) { alert('제출 기한이 마감되었습니다.'); checkDeadline(); return; }
+
+    if (!isStepAnswered(wizardIndex)) {
+      const messages = [
+        '유의사항 체크리스트를 모두 확인해주세요.',
+        '나이/몸무게 조건 여부를 선택해주세요.',
+        '학부모 동의 여부를 선택해주세요.',
+        '학번을 입력해주세요.',
+        '학생 이름을 입력해주세요.',
+        '학부모 연락처를 입력해주세요.',
+        '보호자 성명을 입력해주세요.',
+        '학부모 서명을 해주세요.'
+      ];
+      alert(messages[wizardIndex] || '입력을 확인해주세요.');
+      return;
+    }
+
+    if (wizardIndex === 1 && radioValues['q2'] === '아니오') {
+      alert('만 16세 미만 또는 몸무게 47kg 미만인 경우 헌혈에 참여할 수 없습니다.');
+      return;
+    }
+    if (wizardIndex === 2 && radioValues['q3'] === '미동의') {
+      alert('학부모님의 동의가 없으면 헌혈에 참여할 수 없습니다.');
+      return;
+    }
+
+    if (wizardIndex === WIZARD_TOTAL_STEPS - 1) {
+      submitForm();
+      return;
+    }
+
+    showStep(wizardIndex + 1);
+  }
+
+  function initWizard() {
+    ['student-id', 'student-name', 'parent-tel', 'parent-name'].forEach(id => {
+      const input = document.getElementById(id);
+      input.addEventListener('input', updateNextButtonState);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); wizardNext(); }
+      });
+    });
+    showStep(0);
   }
 
   async function isDuplicateStudent(studentId) {
@@ -763,7 +942,7 @@
     if (!parentName)     { alert('보호자 성명을 입력해주세요.'); return; }
     if (!hasSig)         { alert('학부모 서명을 해주세요.'); return; }
 
-    const btn = document.getElementById('submitBtn');
+    const btn = document.getElementById('wizardNextBtn');
     btn.disabled = true;
     btn.textContent = '중복 제출 확인 중...';
 
@@ -780,7 +959,7 @@
     const payload = {
       submitTime: new Date().toISOString(),
       studentId, studentName, parentTel, parentName, q2, q3,
-      checklist: '모두 확인',
+      checklist: CHECKLIST_ITEMS,
       signatureData: canvas.toDataURL('image/png')
     };
 
