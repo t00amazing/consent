@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>헌혈 참여 학부모 동의서</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #e5342a;
+    --red-light: #fff1f0;
+    --red-mid: #ffdad8;
+    --gray-50: #f9f9f9;
+    --gray-100: #f2f2f2;
+    --gray-200: #e8e8e8;
+    --gray-400: #b0b0b0;
+    --gray-600: #6b6b6b;
+    --gray-800: #1f1f1f;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+    --radius-full: 999px;
+  }
+  body {
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+    padding: 20px 14px 40px;
+    color: var(--gray-800);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page-wrap { max-width: 600px; margin: 0 auto; }
+
+  /* ── 상태바 (동기화) ── */
+  .sync-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-600); padding: 10px 16px;
+    border-radius: var(--radius-full); margin-bottom: 10px;
+    font-size: 12px; font-weight: 500; box-shadow: var(--shadow-sm);
+  }
+  .sync-bar .sync-status { display: flex; align-items: center; gap: 6px; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-400); flex-shrink: 0; }
+  .sync-dot.ok { background: #16a34a; }
+  .sync-dot.err { background: var(--red); }
+  .sync-refresh-btn {
+    border: none; background: var(--gray-100); color: var(--gray-600);
+    padding: 6px 12px; border-radius: var(--radius-full); font-size: 12px;
+    font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s;
+  }
+  .sync-refresh-btn:hover { background: var(--gray-200); }
+  .sync-refresh-btn:disabled { opacity: 0.6; cursor: default; }
+
+  /* ── 신청자 명단 ── */
+  .list-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.7); backdrop-filter: blur(8px);
+    border: 1px solid var(--gray-200);
+    color: var(--gray-600); padding: 11px 16px;
+    border-radius: var(--radius-full); cursor: pointer; margin-bottom: 12px;
+    font-size: 13px; font-weight: 500; user-select: none;
+    box-shadow: var(--shadow-sm); transition: all 0.15s;
+  }
+  .list-toggle:hover { background: white; color: var(--gray-800); }
+  .list-toggle .arrow { transition: transform 0.2s; font-size: 11px; color: var(--gray-400); }
+  .list-toggle .arrow.open { transform: rotate(180deg); }
+  .list-panel {
+    background: white; border-radius: var(--radius-md);
+    margin-bottom: 12px; display: none; overflow: hidden;
+    box-shadow: var(--shadow-md); border: 1px solid var(--gray-200);
+  }
+  .list-panel.show { display: block; }
+  .list-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; padding: 14px 16px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .list-count { font-size: 12.5px; color: var(--gray-600); font-weight: 600; }
+  .list-sort-buttons { display: flex; gap: 6px; }
+  .sort-btn {
+    border: 1.5px solid var(--gray-200); background: var(--gray-50);
+    color: var(--gray-600); padding: 6px 12px; border-radius: var(--radius-full);
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .sort-btn:hover { background: var(--gray-100); }
+  .sort-btn.active { border-color: var(--red); background: var(--red); color: white; }
+  .list-table-wrap { overflow-x: auto; }
+  .submission-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .submission-table th {
+    text-align: left; padding: 10px 16px; background: var(--gray-50);
+    color: var(--gray-400); font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--gray-200); white-space: nowrap;
+  }
+  .submission-table td {
+    padding: 11px 16px; border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-800); white-space: nowrap;
+  }
+  .submission-table tr:last-child td { border-bottom: none; }
+  .empty-row { text-align: center; color: var(--gray-400); padding: 24px 16px !important; white-space: normal !important; }
+
+  /* ── 마감 경고 ── */
+  .deadline-warning {
+    background: var(--red); color: white; text-align: center; padding: 12px 18px;
+    font-size: 13px; font-weight: 600; border-radius: var(--radius-full);
+    margin-bottom: 12px; display: none; box-shadow: var(--shadow-sm);
+  }
+  .deadline-warning.show { display: block; }
+
+  /* ── 카드 공통 ── */
+  .card {
+    background: white; border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 12px;
+  }
+
+  /* ── 헤더 ── */
+  .header {
+    background: var(--red); padding: 28px 26px 24px;
+    color: white; position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: '🩸'; position: absolute; right: 20px; top: 50%;
+    transform: translateY(-50%); font-size: 72px; opacity: 0.12; pointer-events: none;
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.2); border-radius: var(--radius-full);
+    padding: 4px 12px; font-size: 11px; font-weight: 600; margin-bottom: 12px;
+    letter-spacing: 0.3px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 5px; line-height: 1.3; }
+  .header p { font-size: 13px; opacity: 0.8; line-height: 1.6; }
+
+  /* ── 안내문 ── */
+  .notice-box {
+    background: #fffbeb; border-left: 3px solid #f59e0b;
+    padding: 14px 18px; font-size: 13px; line-height: 1.75; color: #78350f;
+  }
+  .notice-box strong { color: var(--red); font-weight: 700; }
+
+  /* ── 정보 그리드 ── */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; background: white; }
+  .info-item { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); }
+  .info-item:nth-child(odd) { border-right: 1px solid var(--gray-100); }
+  .info-label { color: var(--gray-400); font-size: 10px; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; }
+  .info-value { color: var(--gray-800); font-weight: 600; font-size: 14px; }
+  .deadline-row { grid-column: 1 / -1; padding: 14px 18px; background: #fffbeb; display: none; border-top: 1px solid #fde68a; }
+  .deadline-row .info-label { color: #d97706; }
+  .deadline-row .info-value { color: var(--red); font-size: 14px; font-weight: 700; }
+
+  /* ── 섹션 ── */
+  .section { padding: 22px 20px; }
+  .section + .section { border-top: 1px solid var(--gray-100); }
+  .section-title {
+    font-size: 13px; font-weight: 700; color: var(--gray-800);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .section-title-dot {
+    width: 6px; height: 6px; background: var(--red); border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* ── 감염병 목록 ── */
+  .restriction-list { display: flex; flex-direction: column; gap: 8px; }
+  .restriction-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px;
+    background: var(--gray-50); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-600);
+  }
+  .restriction-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── 체크리스트 ── */
+  .checklist { display: flex; flex-direction: column; gap: 8px; }
+  .check-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.12s; background: white;
+  }
+  .check-item:active { transform: scale(0.99); }
+  .check-item.checked { border-color: var(--red); background: var(--red-light); }
+  .check-item input[type="checkbox"] { width: 18px; height: 18px; min-width: 18px; accent-color: var(--red); cursor: pointer; }
+  .check-item label { font-size: 13.5px; line-height: 1.45; cursor: pointer; color: var(--gray-800); }
+
+  /* ── 질문 ── */
+  .q-number {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; background: var(--red); color: white;
+    border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 7px; flex-shrink: 0;
+  }
+  .q-title { font-size: 14px; font-weight: 600; color: var(--gray-800); display: flex; align-items: flex-start; margin-bottom: 5px; flex-wrap: wrap; line-height: 1.5; }
+  .q-sub { font-size: 12px; color: #d97706; margin-bottom: 10px; font-weight: 500; }
+  .required { color: var(--red); margin-left: 2px; }
+
+  /* ── 라디오 ── */
+  .radio-group { display: flex; gap: 8px; margin-top: 8px; }
+  .radio-item {
+    flex: 1; padding: 13px 10px; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm); text-align: center; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: var(--gray-600);
+    transition: all 0.12s; background: var(--gray-50);
+  }
+  .radio-item:active { transform: scale(0.98); }
+  .radio-item.selected { border-color: var(--red); background: var(--red); color: white; box-shadow: 0 2px 8px rgba(229,52,42,0.25); }
+
+  /* ── 입력 필드 ── */
+  .field-group { margin-bottom: 20px; }
+  .field-hint { font-size: 12px; color: var(--gray-400); margin-top: 6px; }
+  input[type="text"], input[type="tel"] {
+    width: 100%; padding: 13px 16px;
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    font-size: 15px; font-family: inherit; outline: none;
+    transition: all 0.15s; color: var(--gray-800); background: var(--gray-50);
+  }
+  input[type="text"]:focus, input[type="tel"]:focus {
+    border-color: var(--red); background: white;
+    box-shadow: 0 0 0 3px rgba(229,52,42,0.08);
+  }
+
+  /* ── 서명 캔버스 ── */
+  .canvas-wrap {
+    border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+    overflow: hidden; background: white;
+  }
+  canvas { display: block; cursor: crosshair; touch-action: none; width: 100%; }
+  .canvas-actions {
+    display: flex; justify-content: flex-end; padding: 8px 12px;
+    background: var(--gray-50); border-top: 1px solid var(--gray-100);
+  }
+  .btn-clear {
+    padding: 6px 16px; border: 1.5px solid var(--gray-200);
+    background: white; border-radius: var(--radius-full);
+    font-size: 12px; cursor: pointer; color: var(--gray-600);
+    font-family: inherit; font-weight: 500; transition: all 0.12s;
+  }
+  .btn-clear:hover { background: var(--gray-100); }
+  .sig-label { padding: 10px 16px; font-size: 12px; color: var(--gray-400); border-bottom: 1px solid var(--gray-100); }
+
+  /* ── 제출 버튼 ── */
+  .submit-btn {
+    width: 100%; padding: 17px; background: var(--red); color: white; border: none;
+    border-radius: var(--radius-full); font-size: 16px; font-weight: 700;
+    cursor: pointer; font-family: inherit; margin-top: 6px; letter-spacing: -0.2px;
+    box-shadow: 0 4px 16px rgba(229,52,42,0.3); transition: all 0.15s;
+  }
+  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(229,52,42,0.35); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; box-shadow: none; transform: none; }
+
+  /* ── 성공/마감 화면 ── */
+  .footer-note { text-align: center; font-size: 12px; color: var(--gray-400); padding: 18px; }
+  .success-overlay { display: none; text-align: center; padding: 48px 24px; }
+  .success-overlay.show { display: block; }
+  .success-icon { font-size: 52px; margin-bottom: 16px; }
+  .success-title { font-size: 21px; font-weight: 700; color: var(--gray-800); margin-bottom: 8px; }
+  .success-msg { font-size: 14px; color: var(--gray-600); line-height: 1.75; }
+  .form-disabled-overlay { padding: 40px 24px; text-align: center; display: none; }
+  .form-disabled-overlay.show { display: block; }
+  .form-disabled-overlay .icon { font-size: 40px; margin-bottom: 12px; }
+  .form-disabled-overlay p { color: var(--red); font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+  .form-disabled-overlay small { color: var(--gray-400); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- 시트 동기화 상태바 -->
+  <div class="sync-bar">
+    <div class="sync-status">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">구글시트에서 정보를 불러오는 중...</span>
+    </div>
+    <button class="sync-refresh-btn" id="refreshBtn" onclick="fetchConfig()">🔄 새로고침</button>
+  </div>
+
+  <!-- 신청자 명단 -->
+  <div class="list-toggle" onclick="toggleSubmissionList()">
+    <span>📋 신청자 명단 보기</span>
+    <span class="arrow" id="listArrow">▼</span>
+  </div>
+  <div class="list-panel" id="listPanel">
+    <div class="list-panel-header">
+      <span class="list-count" id="submissionCount">불러오는 중...</span>
+      <div class="list-sort-buttons">
+        <button class="sort-btn" id="sortByIdBtn" onclick="setSort('studentId')">학번순 <span id="sortByIdArrow"></span></button>
+        <button class="sort-btn" id="sortByTimeBtn" onclick="setSort('submitTime')">제출순 <span id="sortByTimeArrow"></span></button>
+        <button class="sync-refresh-btn" onclick="loadSubmissionList()">🔄</button>
+      </div>
+    </div>
+    <div class="list-table-wrap">
+      <table class="submission-table">
+        <thead>
+          <tr><th>제출일시</th><th>학번</th><th>이름</th></tr>
+        </thead>
+        <tbody id="submissionListBody">
+          <tr><td colspan="3" class="empty-row">패널을 열면 명단을 불러옵니다</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="deadline-warning" id="deadlineWarning">⛔ 제출 기한이 마감되었습니다.</div>
+
+  <!-- 메인 카드 -->
+  <div class="card">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="header-badge">🩸 헌혈 참여 안내</div>
+      <h1>학부모 동의서</h1>
+      <p id="disp-subtitle">2026년 5월 8일(금) 9:30 ~ | 이동형 헌혈 버스 본교 방문</p>
+    </div>
+
+    <!-- 안내문 -->
+    <div class="notice-box">
+      아래 사항을 모두 숙지한 후에 헌혈 참여 부탁드립니다.<br>
+      당일 진행 상황에 따라 참여하지 못할 수 있습니다.<br>
+      <strong>반드시 보호자의 동의를 받고 헌혈을 받을 수 있도록 합니다.</strong>
+    </div>
+
+    <!-- 기본 정보 -->
+    <div class="info-grid">
+      <div class="info-item"><div class="info-label">일시</div><div class="info-value" id="disp-date">2026.5.8(금) 9:30~</div></div>
+      <div class="info-item"><div class="info-label">장소</div><div class="info-value" id="disp-place">이동형 헌혈 버스 본교</div></div>
+      <div class="info-item"><div class="info-label">대상</div><div class="info-value" id="disp-target">만 16세↑ / 47kg↑</div></div>
+      <div class="info-item"><div class="info-label">봉사시간</div><div class="info-value" id="disp-service">4시간 인정</div></div>
+      <div class="deadline-row" id="deadline-row">
+        <div class="info-label">제출 기한</div>
+        <div class="info-value" id="disp-deadline">—</div>
+      </div>
+    </div>
+
+    <!-- 감염병 제한 -->
+    <div class="section">
+      <div class="section-title"><span class="section-title-dot"></span>감염병 관련 헌혈 제한</div>
+      <div class="restriction-list" id="restrictionList">
+        <div class="restriction-item"><span class="restriction-icon">⚠️</span>유행성각결막염: 치료 종료 후 4주 이후 헌혈 가능</div>
+        <div class="restriction-item"><span class="restriction-icon">⚠️</span>독감(인플루엔자): 치료 종료 후 헌혈 가능</div>
+        <div class="restriction-item"><span class="restriction-icon">⚠️</span>코로나19: 치료 종료 10일 후 가능</div>
+      </div>
+    </div>
+
+    <!-- 동의서 작성 폼 -->
+    <div class="section" id="form-section">
+      <div class="section-title"><span class="section-title-dot"></span>동의서 작성</div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">1</span>헌혈 유의사항을 모두 확인하셨나요? <span class="required">*</span></div>
+        <div class="q-sub">아래 항목을 모두 체크해주세요</div>
+        <div class="checklist" id="checklist">
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c1"><label for="c1">😴 헌혈 전 충분한 숙면</label></div>
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c2"><label for="c2">🍚 헌혈 당일 아침 식사 필수</label></div>
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c3"><label for="c3">🪪 본인 주민번호 13자리 숙지</label></div>
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c4"><label for="c4">💊 약물복용 · 감염병 확진 등 헌혈 제한 사항 고지의무</label></div>
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c5"><label for="c5">📌 보호자의 동의 필수</label></div>
+          <div class="check-item" onclick="toggleCheck(this)"><input type="checkbox" id="c6"><label for="c6">⚠️ 헌혈진행자가 많은 경우 당일 참여가 어려울 수 있음</label></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">2</span><span id="disp-q2-title">학생의 나이가 만 16세 이상(2010년생 생일이 지난 경우), 몸무게 47kg 이상입니까?</span><span class="required">*</span></div>
+        <div class="q-sub" id="disp-q2-sub">(여학생의 경우, 만 16세 미만, 몸무게 47kg 미만인 경우 참여불가 합니다.)</div>
+        <div class="radio-group">
+          <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="예">예</div>
+          <div class="radio-item" onclick="selectRadio(this,'q2')" data-group="q2" data-value="아니오">아니오</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">3</span>학생의 헌혈 참여에 동의하십니까? <span class="required">*</span></div>
+        <div class="q-sub">(학생의 헌혈 참여는 학부모님의 동의가 반드시 필요합니다.)</div>
+        <div class="radio-group">
+          <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="동의">예, 동의합니다</div>
+          <div class="radio-item" onclick="selectRadio(this,'q3')" data-group="q3" data-value="미동의">아니오</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">4</span>학생 학번 <span class="required">*</span></div>
+        <input type="text" id="student-id" placeholder="예: 20101" maxlength="10">
+        <div class="field-hint">학년+반+번호 형식 (예: 20101 = 2학년 1반 1번)</div>
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">5</span>학생 이름 <span class="required">*</span></div>
+        <input type="text" id="student-name" placeholder="예: 홍길동">
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">6</span>학부모 연락처 <span class="required">*</span></div>
+        <input type="tel" id="parent-tel" placeholder="예: 010-0000-0000">
+      </div>
+
+      <div class="field-group">
+        <div class="q-title"><span class="q-number">7</span>보호자 성명 <span class="required">*</span></div>
+        <input type="text" id="parent-name" placeholder="예: 홍길순">
+      </div>
+
+      <div class="field-group">
+        <div class="q-title" style="margin-bottom:6px;">학부모 서명 <span class="required">*</span></div>
+        <div class="field-hint" style="color:var(--red);font-weight:600;margin-bottom:3px;">✏️ 보호자 성명을 정자로 기입해주세요.</div>
+        <div class="field-hint" style="margin-bottom:10px;">손가락을 떼도 서명이 유지됩니다.</div>
+        <div class="canvas-wrap">
+          <div class="sig-label">서명란</div>
+          <canvas id="sigCanvas" height="180"></canvas>
+          <div class="canvas-actions">
+            <button class="btn-clear" onclick="clearCanvas()">서명 지우기</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">동의서 제출하기 →</button>
+    </div>
+
+    <div class="form-disabled-overlay" id="formDisabled">
+      <div class="icon">🔒</div>
+      <p>제출 기한이 마감되었습니다</p>
+      <small id="formDisabledMsg"></small>
+    </div>
+
+    <div class="success-overlay" id="successDiv">
+      <div class="success-icon">✅</div>
+      <div class="success-title">제출 완료!</div>
+      <div class="success-msg">
+        학부모님의 동의 감사합니다.<br>
+        <strong><span id="success-name"></span></strong> 학생이 헌혈 명단에 등록되었습니다.<br><br>
+        당일 진행 상황에 따라 참여가 어려울 수 있는 점 양해 부탁드립니다.
+      </div>
+    </div>
+
+    <div class="footer-note">ⓒ 헌혈 참여 동의서 &nbsp;·&nbsp; 문의: 보건실</div>
+  </div>
+</div>
+
+<script>
+  // ⚠️ 배포된 Google Apps Script 웹앱 URL로 교체하세요 (Code.gs 참고)
+  let GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaXh9LlQ2mp9IHFkEsZ5tdhCknbM3f8vqLLJlpMf29_yzGPxPOmGKY-A-iDjuKRlnp/exec';
+
+  let deadlineTime = null;
+  let currentConfig = {};
+
+  // ── 구글시트("설정" 탭)에서 설정값 불러오기 ──
+  function setSyncStatus(state, text) {
+    const dot = document.getElementById('syncDot');
+    const label = document.getElementById('syncText');
+    dot.className = 'sync-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+    label.textContent = text;
+  }
+
+  async function fetchConfig() {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    setSyncStatus('', '구글시트에서 정보를 불러오는 중...');
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'GET' });
+      const data = await res.json();
+      if (data && data.ok && data.config) {
+        currentConfig = data.config;
+        applyConfigToDisplay(currentConfig);
+        if (Array.isArray(data.restrictions)) renderRestrictions(data.restrictions);
+        const now = new Date();
+        setSyncStatus('ok', '최신 정보 (' + now.toLocaleTimeString('ko-KR') + ' 기준)');
+      } else {
+        throw new Error('설정 데이터 없음');
+      }
+    } catch (err) {
+      setSyncStatus('err', '시트 연결 실패 - 기본값으로 표시 중 (새로고침을 눌러보세요)');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function escapeHtml_(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderRestrictions(list) {
+    const container = document.getElementById('restrictionList');
+    if (!list || list.length === 0) return; // 시트가 비어있으면 기존 기본 목록 유지
+    container.innerHTML = list.map(item => {
+      const icon = escapeHtml_(item.icon || '⚠️');
+      const text = escapeHtml_(item.text || '');
+      return `<div class="restriction-item"><span class="restriction-icon">${icon}</span>${text}</div>`;
+    }).join('');
+  }
+
+  function applyConfigToDisplay(cfg) {
+    if (cfg.event_date) document.getElementById('disp-date').textContent = cfg.event_date;
+    if (cfg.place)       document.getElementById('disp-place').textContent = cfg.place;
+    if (cfg.target)      document.getElementById('disp-target').textContent = cfg.target;
+    if (cfg.service)     document.getElementById('disp-service').textContent = cfg.service;
+    if (cfg.subtitle)    document.getElementById('disp-subtitle').textContent = cfg.subtitle;
+    if (cfg.q2_title)    document.getElementById('disp-q2-title').textContent = cfg.q2_title;
+    if (cfg.q2_sub)      document.getElementById('disp-q2-sub').textContent = cfg.q2_sub;
+
+    if (cfg.deadline) {
+      deadlineTime = new Date(cfg.deadline);
+      const fmt = deadlineTime.toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('disp-deadline').textContent = fmt + ' 까지';
+      document.getElementById('deadline-row').style.display = 'block';
+    } else {
+      deadlineTime = null;
+      document.getElementById('deadline-row').style.display = 'none';
+    }
+    checkDeadline();
+  }
+
+  function checkDeadline() {
+    if (!deadlineTime) {
+      document.getElementById('deadlineWarning').classList.remove('show');
+      document.getElementById('form-section').style.display = 'block';
+      document.getElementById('formDisabled').classList.remove('show');
+      return;
+    }
+    const now = new Date();
+    const isExpired = now > deadlineTime;
+    document.getElementById('deadlineWarning').classList.toggle('show', isExpired);
+    document.getElementById('form-section').style.display = isExpired ? 'none' : 'block';
+    const fd = document.getElementById('formDisabled');
+    fd.classList.toggle('show', isExpired);
+    if (isExpired) {
+      const fmt = deadlineTime.toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('formDisabledMsg').textContent = '제출 기한: ' + fmt;
+    }
+  }
+
+  window.addEventListener('load', () => {
+    fetchConfig();
+    initCanvas();
+  });
+
+  // ── 신청자 명단 ──
+  let submissionsCache = [];
+  let submissionListLoaded = false;
+  let sortField = 'submitTime';
+  let sortDir = 'desc';
+
+  function toggleSubmissionList() {
+    const panel = document.getElementById('listPanel');
+    const arrow = document.getElementById('listArrow');
+    const willShow = !panel.classList.contains('show');
+    panel.classList.toggle('show', willShow);
+    arrow.classList.toggle('open', willShow);
+    if (willShow) {
+      updateSortButtonUI();
+      if (!submissionListLoaded) loadSubmissionList();
+    }
+  }
+
+  async function loadSubmissionList() {
+    const tbody = document.getElementById('submissionListBody');
+    const countLabel = document.getElementById('submissionCount');
+    countLabel.textContent = '불러오는 중...';
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_URL + '?action=list');
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.submissions)) {
+        submissionsCache = data.submissions;
+        submissionListLoaded = true;
+        renderSubmissionList();
+      } else {
+        throw new Error('명단 데이터 없음');
+      }
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-row">명단을 불러오지 못했습니다. 🔄 버튼으로 다시 시도해주세요.</td></tr>';
+      countLabel.textContent = '오류';
+    }
+  }
+
+  function setSort(field) {
+    if (sortField === field) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortField = field;
+      sortDir = 'asc';
+    }
+    updateSortButtonUI();
+    renderSubmissionList();
+  }
+
+  function updateSortButtonUI() {
+    const idBtn = document.getElementById('sortByIdBtn');
+    const timeBtn = document.getElementById('sortByTimeBtn');
+    const idArrow = document.getElementById('sortByIdArrow');
+    const timeArrow = document.getElementById('sortByTimeArrow');
+    idBtn.classList.toggle('active', sortField === 'studentId');
+    timeBtn.classList.toggle('active', sortField === 'submitTime');
+    idArrow.textContent = sortField === 'studentId' ? (sortDir === 'asc' ? '↑' : '↓') : '';
+    timeArrow.textContent = sortField === 'submitTime' ? (sortDir === 'asc' ? '↑' : '↓') : '';
+  }
+
+  function renderSubmissionList() {
+    const tbody = document.getElementById('submissionListBody');
+    const countLabel = document.getElementById('submissionCount');
+
+    const sorted = [...submissionsCache].sort((a, b) => {
+      let cmp;
+      if (sortField === 'studentId') {
+        cmp = String(a.studentId || '').localeCompare(String(b.studentId || ''), 'ko', { numeric: true, sensitivity: 'base' });
+      } else {
+        cmp = new Date(a.submitTime || 0).getTime() - new Date(b.submitTime || 0).getTime();
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    countLabel.textContent = sorted.length + '명 제출';
+
+    if (sorted.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-row">아직 제출된 동의서가 없습니다.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = sorted.map(item => {
+      const dateStr = item.submitTime ? new Date(item.submitTime).toLocaleString('ko-KR') : '-';
+      return '<tr>' +
+        '<td>' + escapeHtml_(dateStr) + '</td>' +
+        '<td>' + escapeHtml_(item.studentId || '') + '</td>' +
+        '<td>' + escapeHtml_(item.studentName || '') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // ── Canvas 서명 (모바일 최적화) ──
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  let hasSig = false;
+  let paths = [];
+  let currentPath = [];
+
+  function setupCtx() {
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  function initCanvas() {
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth;
+    canvas.height = 180;
+    setupCtx();
+    redrawAll();
+  }
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return {
+      x: (src.clientX - r.left) * (canvas.width / r.width),
+      y: (src.clientY - r.top) * (canvas.height / r.height)
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    currentPath = [];
+    const p = getPos(e);
+    currentPath.push(p);
+    setupCtx();
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+
+  function moveDraw(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    const p = getPos(e);
+    currentPath.push(p);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    hasSig = true;
+  }
+
+  function endDraw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    drawing = false;
+    if (currentPath.length > 0) paths.push([...currentPath]);
+  }
+
+  function redrawAll() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setupCtx();
+    paths.forEach(path => {
+      if (path.length === 0) return;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      path.forEach(p => { ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    });
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    paths = [];
+    currentPath = [];
+    hasSig = false;
+  }
+
+  canvas.style.touchAction = 'none';
+  canvas.style.userSelect = 'none';
+  canvas.style.webkitUserSelect = 'none';
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', moveDraw, { passive: false });
+  canvas.addEventListener('touchend', endDraw, { passive: false });
+  canvas.addEventListener('touchcancel', endDraw, { passive: false });
+  window.addEventListener('resize', initCanvas);
+
+  function toggleCheck(el) {
+    const cb = el.querySelector('input[type="checkbox"]');
+    cb.checked = !cb.checked;
+    el.classList.toggle('checked', cb.checked);
+  }
+
+  const radioValues = {};
+  function selectRadio(el, group) {
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+    radioValues[group] = el.dataset.value;
+  }
+
+  async function isDuplicateStudent(studentId) {
+    try {
+      const url = GOOGLE_SCRIPT_URL + '?checkStudentId=' + encodeURIComponent(studentId);
+      const res = await fetch(url);
+      const data = await res.json();
+      return !!(data && data.ok && data.exists);
+    } catch (err) {
+      // 확인 자체가 실패하면 서버 측(doPost) 중복 검사에 맡기고 통과시킴
+      return false;
+    }
+  }
+
+  async function submitForm() {
+    if (deadlineTime && new Date() > deadlineTime) { alert('제출 기한이 마감되었습니다.'); checkDeadline(); return; }
+
+    const q2 = radioValues['q2'];
+    const q3 = radioValues['q3'];
+    const studentId   = document.getElementById('student-id').value.trim();
+    const studentName = document.getElementById('student-name').value.trim();
+    const parentTel   = document.getElementById('parent-tel').value.trim();
+    const parentName  = document.getElementById('parent-name').value.trim();
+    const allChecked  = document.querySelectorAll('#checklist input:not(:checked)').length === 0;
+
+    if (!allChecked)     { alert('유의사항 체크리스트를 모두 확인해주세요.'); return; }
+    if (!q2)             { alert('나이/몸무게 조건 여부를 선택해주세요.'); return; }
+    if (q2 === '아니오') { alert('만 16세 미만 또는 몸무게 47kg 미만인 경우 헌혈에 참여할 수 없습니다.'); return; }
+    if (!q3)             { alert('학부모 동의 여부를 선택해주세요.'); return; }
+    if (q3 === '미동의') { alert('학부모님의 동의가 없으면 헌혈에 참여할 수 없습니다.'); return; }
+    if (!studentId)      { alert('학번을 입력해주세요.'); return; }
+    if (!studentName)    { alert('학생 이름을 입력해주세요.'); return; }
+    if (!parentTel)      { alert('학부모 연락처를 입력해주세요.'); return; }
+    if (!parentName)     { alert('보호자 성명을 입력해주세요.'); return; }
+    if (!hasSig)         { alert('학부모 서명을 해주세요.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '중복 제출 확인 중...';
+
+    const alreadySubmitted = await isDuplicateStudent(studentId);
+    if (alreadySubmitted) {
+      alert('이미 제출된 학번입니다. 중복 제출은 불가능합니다.');
+      btn.disabled = false;
+      btn.textContent = '동의서 제출하기 →';
+      return;
+    }
+
+    btn.textContent = '제출 중...';
+
+    const payload = {
+      submitTime: new Date().toISOString(),
+      studentId, studentName, parentTel, parentName, q2, q3,
+      checklist: '모두 확인',
+      signatureData: canvas.toDataURL('image/png')
+    };
+
+    if (!GOOGLE_SCRIPT_URL) {
+      alert('⚠️ Google Script URL이 설정되지 않았습니다.');
+      btn.disabled = false;
+      btn.textContent = '동의서 제출하기 →';
+      return;
+    }
+
+    try {
+      const sendData = async () => {
+        // 서명 이미지 용량 줄이기 (모바일 대용량 문제 방지)
+        const offscreen = document.createElement('canvas');
+        offscreen.width = 400;
+        offscreen.height = 120;
+        const offCtx = offscreen.getContext('2d');
+        offCtx.fillStyle = '#ffffff';
+        offCtx.fillRect(0, 0, 400, 120);
+        offCtx.drawImage(canvas, 0, 0, 400, 120);
+        const compressedSig = offscreen.toDataURL('image/png');
+
+        payload.signatureData = compressedSig;
+
+        return new Promise((resolve) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', GOOGLE_SCRIPT_URL, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.timeout = 15000;
+          xhr.onload = () => {
+            let result = { ok: true };
+            try { result = JSON.parse(xhr.responseText); } catch (parseErr) { /* 응답 파싱 실패 시 성공으로 간주 */ }
+            resolve(result);
+          };
+          xhr.onerror = () => {
+            fetch(GOOGLE_SCRIPT_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              body: JSON.stringify(payload)
+            }).finally(() => resolve({ ok: true, unknown: true }));
+          };
+          xhr.ontimeout = () => resolve({ ok: true, unknown: true });
+          xhr.send(JSON.stringify(payload));
+        });
+      };
+
+      const result = await sendData();
+
+      if (result && result.ok === false && result.duplicate) {
+        alert('이미 제출된 학번입니다. 중복 제출은 불가능합니다.');
+        btn.disabled = false;
+        btn.textContent = '동의서 제출하기 →';
+        return;
+      }
+
+      showSuccess(studentName);
+
+    } catch (err) {
+      showSuccess(studentName);
+    }
+  }
+
+  function showSuccess(studentName) {
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('successDiv').classList.add('show');
+    document.getElementById('success-name').textContent = studentName;
+    if (submissionListLoaded) loadSubmissionList();
+  }
+</script>
+</body>
+</html>
